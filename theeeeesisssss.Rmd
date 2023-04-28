@@ -1,0 +1,261 @@
+---
+title: "Thesis work"
+output: html_document
+date: "2023-04-17"
+---
+```{r}
+
+library(nlme)
+library(rlang)
+library(stats)
+library(ggplot2)
+library(broom)
+library(tidyverse)
+library(AICcmodavg)
+library(ggpubr)
+library(coin)
+library(car)
+
+
+```
+
+```{r data frame}
+init.pshe <- prop.test(x = c(8, 10), n = c(18, 18))
+print(init.pshe)
+
+init.ptey <- prop.test(x = c(5, 4), n = c(14, 14))
+print(init.ptey)
+
+init.pshetey <- prop.test(x = c(8, 12), n = c(20, 20))
+print(init.pshetey)
+
+species <- c("pshe", "pshe", "ptey", "ptey", "pshetey", "pshetey")
+temperature <- c(15, 23, 15, 23, 15, 23)
+initiating <- c(0.44,0.56,0.36,0.29,0.4,0.6)
+
+
+
+
+```
+
+```{r pshe data}
+pshe.ID <- c("pshe013","pshe009","pshe007","pshe015","pshe008","pshe011","pshe012","pshe006","pshe015","pshe008","pshe010","pshe011","pshe012","pshe006","pshe013","pshe009","pshe010","pshe007","pshe007","pshe011","pshe009","pshe007","pshe011","pshe009","pshe006","pshe010","pshe013","pshe014","pshe012","pshe015","pshe006","pshe010","pshe013","pshe014","pshe012","pshe015")
+pshe.temp <- c("15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23")
+pshe.TAI <- c(3,27,3,15,0,11,0,49,0,25,21,1,32,21,0,48,7,6,77,22,70,51,33,20,20,14,30,0,0,0,41,45,20,10,14,11)
+pshe.TEI <- c(52,3,0,4,0,1,0,0,0,5,0,6,5,0,0,4,0,12,1,3,11,0,6,4,8,7,41,13,8,41,2,1,21,0,25,58)
+pshe.indiv.mass <- c(1.968, 2.371, 1.929, 2.987, 1.513, 2.533, 2.350, 2.035, 3.073, 1.513, 3.389, 2.533, 2.144, 1.899, 1.945, 2.371, 3.389, 1.929, 1.929, 2.533, 2.371, 1.929, 2.533, 2.371, 2.035, 3.389, 1.945, 1.611, 2.350, 2.987, 2.035, 3.389, 1.945, 1.611, 2.350, 2.987)
+pshe.opp.mass <- c(7.040,3.280,3.363,7.010,3.280,3.363,3.227,2.599,3.019,3.388,2.525,3.165,2.599,3.680,3.227,2.525,4.069,3.165, 6.344, 9.863, 7.881, 7.040, 6.344, 3.363, 3.410, 2.770, 2.599, 3.019, 3.165, 3.472, 2.770, 3.410, 3.019, 2.599, 3.680, 3.165)
+pshe.mass.diff <- c(5.072,0.909,1.434,4.023,1.767,0.83,0.877,0.564,-0.054,1.875,-0.864,0.632,0.455,1.781,1.282,0.154,0.68,1.236,4.415,7.330,5.510,5.111,3.811,0.992,1.375,-0.619,0.654,1.408,0.815,0.485,0.735,0.021,1.074,0.988,1.330,0.178)
+
+pshe.df <- data.frame(pshe.temp, pshe.TAI, pshe.TEI, pshe.mass.diff,pshe.ID)
+
+pshe.df$pshe.temp <- as.factor(pshe.df$pshe.temp)
+pshe.df$pshe.ID <- as.factor(pshe.df$pshe.ID)
+
+summary(pshe.df)
+
+sqrt.pshe.TAI <- sqrt(pshe.df$pshe.TAI)
+sqrt.pshe.TEI <- sqrt(pshe.df$pshe.TEI)
+
+bp.pshe.tai <- ggplot(data=pshe.df, aes(x=pshe.temp, y=sqrt.pshe.TAI, fill=pshe.temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+bp.pshe.tei <- ggplot(data=pshe.df, aes(x=pshe.temp, y=sqrt.pshe.TEI, fill=pshe.temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+print(bp.pshe.tai)
+print(bp.pshe.tei)
+
+```
+
+```{r pshe stats}
+
+pshe.tai.model <- lme(sqrt.pshe.TAI~pshe.temp+pshe.mass.diff, random= ~1|pshe.ID, method="ML", data=pshe.df)
+summary(pshe.tai.model)
+anova(pshe.tai.model)
+
+pshe.tei.model <- lme(sqrt.pshe.TEI~pshe.temp + pshe.mass.diff, random= ~1|pshe.ID, method="ML", data=pshe.df)
+summary(pshe.tei.model)
+anova(pshe.tei.model)
+
+
+```
+
+```{r ptey figures}
+ptey.ID <- c("ptey011","ptey008","ptey006","ptey011","ptey008","ptey006","ptey012","ptey007","ptey010","ptey009","ptey012","ptey007","ptey010","ptey009","ptey007","ptey012","ptey010","ptey011","ptey007","ptey006","ptey008","ptey009","ptey011","ptey006","ptey009","ptey008","ptey012","ptey010")
+ptey.temp <- c("15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23")
+ptey.TAI <- c(31,28,9,10,0,0,3,1,2,33,44,4,40,17,1,2,8,3,9,4,20,0,0,32,28,36,18,5)
+ptey.TEI <- c(2,0,0,4,0,0,23,0,11,16,3,2,4,0,34,9,37,16,3,7,0,0,0,5,6,7,11,12)
+ptey.mass.diff <- c(-0.654,-0.909,-1.434,0.388,-1.767,-0.83,-6.173,-2.275,-0.395,-4.471,-6.844,-2.956,-1.048,-5.111,-4.415,-7.330,-2.087,-5.111,-3.811,-0.992,-0.755,-4.654,-3.652,0.706,-5.356,-0.053,-6.475,-0.389)
+
+ptey.df <-data.frame(ptey.temp, ptey.TAI, ptey.TEI, ptey.mass.diff, ptey.ID)
+
+ptey.df$ptey.temp <- as.factor(ptey.df$ptey.temp)
+ptey.df$ptey.ID <- as.factor(ptey.df$ptey.ID)
+
+sqrt.ptey.TAI <- sqrt(ptey.df$ptey.TAI)
+sqrt.ptey.TEI <- sqrt(ptey.df$ptey.TEI)
+
+bp.ptey.tai <- ggplot(data=ptey.df, aes(x=ptey.temp, y=sqrt.ptey.TAI, fill=ptey.temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+bp.ptey.tei <- ggplot(data=ptey.df, aes(x=ptey.temp, y=sqrt.ptey.TEI, fill=ptey.temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+print(bp.ptey.tai)
+print(bp.ptey.tei)
+
+```
+
+```{r ptey stats}
+
+
+ptey.tai.model <- lme(sqrt.ptey.TAI~ptey.temp+ptey.mass.diff, random= ~1|ptey.ID, method="ML", data=ptey.df)
+summary(ptey.tai.model)
+anova(ptey.tai.model)
+
+ptey.tei.model <- lme(sqrt.ptey.TEI~ptey.temp+ptey.mass.diff, random= ~1|ptey.ID, method="ML", data=ptey.df)
+summary(ptey.tei.model)
+anova(ptey.tei.model)
+```
+
+```{r hybrids figures}
+pshetey.ID <- c("pshetey006","pshetey011","pshetey008","pshetey012","pshetey014","pshetey010","pshetey011","pshetey015","pshetey006","pshetey014","pshetey013","pshetey010","pshetey015","pshetey013","pshetey009","pshetey007","pshetey008","pshetey012","pshetey007","pshetey009","pshetey007","pshetey009","pshetey011","pshetey008","pshetey010","pshetey015","pshetey009","pshetey007","pshetey008","pshetey011","pshetey015","pshetey010","pshetey014","pshetey006","pshetey012","pshetey013","pshetey014","pshetey006","pshetey012","pshetey013")
+pshetey.temp <- c("15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23")
+pshetey.TAI <- c(0,1,0,21,15,6,17,0,0,60,28,10,99,1,33,32,0,4,17,0,19,36,20,19,13,8,19,9,30,0,23,84,1,14,1,8,34,52,52,14)
+pshetey.TEI <- c(0,3,0,4,10,0,3,2,0,9,6,0,3,0,3,17,14,2,11,11,18,5,18,3,0,6,20,1,31,28,0,1,1,1,1,5,8,5,8,0)
+pshetey.mass.diff <- c(-0.877,-0.564,-0.032,-1.875,0.864,-0.632,-0.249,-1.645,-1.282,-0.154,-0.680,-1.236,6.183,2.275,1.688,4.471,6.844,2.956,1.048,5.111,-0.183,0.619,-0.654,-1.408,-0.815,-0.693,-0.735,-0.021,-1.074,-0.988,-1.330,-0.178,0.755,4.654,3.652,-0.706,5.356,0.053,6.475,0.389)
+
+pshetey.df <-data.frame(pshetey.temp, pshetey.TAI, pshetey.TEI, pshetey.ID)
+
+pshetey.df$pshetey.temp <- as.factor(pshetey.df$pshetey.temp)
+pshetey.df$pshetey.ID <- as.factor(pshetey.df$pshetey.ID)
+
+sqrt.pshetey.TAI <- sqrt(pshetey.df$pshetey.TAI)
+sqrt.pshetey.TEI <- sqrt(pshetey.df$pshetey.TEI)
+
+
+
+bp.pshetey.tai <- ggplot(data=pshetey.df, aes(x=pshetey.temp, y=sqrt.pshetey.TAI, fill=pshetey.temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+bp.pshetey.tei <- ggplot(data=pshetey.df, aes(x=pshetey.temp, y=sqrt.pshetey.TEI, fill=pshetey.temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+print(bp.pshetey.tai)
+print(bp.pshetey.tei)
+
+```
+
+```{r pshetey stats}
+
+
+
+pshetey.tai.model <- lme(sqrt.pshetey.TAI~pshetey.temp+pshetey.mass.diff, random= ~1|pshetey.ID, method="ML", data=pshetey.df)
+summary(pshetey.tai.model)
+anova(pshetey.tai.model)
+
+pshetey.tei.model <- lme(sqrt.pshetey.TEI~pshetey.temp+pshetey.mass.diff, random= ~1|pshetey.ID, method="ML", data=pshetey.df)
+summary(pshetey.tei.model)
+anova(pshetey.tei.model)
+
+
+```
+```{r parents}
+parents.ID <- c("pshe013","pshe009","pshe007","pshe015","pshe008","pshe011","pshe012","pshe006","pshe015","pshe008","pshe010","pshe011","pshe012","pshe006","pshe013","pshe009","pshe010","pshe007","pshe007","pshe011","pshe009","pshe007","pshe011","pshe009","pshe006","pshe010","pshe013","pshe014","pshe012","pshe015","pshe006","pshe010","pshe013","pshe014","pshe012","pshe015","ptey011","ptey008","ptey006","ptey011","ptey008","ptey006","ptey012","ptey007","ptey010","ptey009","ptey012","ptey007","ptey010","ptey009","ptey007","ptey012","ptey010","ptey011","ptey007","ptey006","ptey008","ptey009","ptey011","ptey006","ptey009","ptey008","ptey012","ptey010")
+parents.temp <- c("15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23")
+parents.TAI <- c(3,27,3,15,0,11,0,49,0,25,21,1,32,21,0,48,7,6,77,22,70,51,33,20,20,14,30,0,0,0,41,45,20,10,14,11,31,28,9,10,0,0,3,1,2,33,44,4,40,17,1,2,8,3,9,4,20,0,0,32,28,36,18,5)
+parents.TEI <- c(52,3,0,4,0,1,0,0,0,5,0,6,5,0,0,4,0,12,1,3,11,0,6,4,8,7,41,13,8,41,2,1,21,0,25,58,2,0,0,4,0,0,23,0,11,16,3,2,4,0,34,9,37,16,3,7,0,0,0,5,6,7,11,12)
+parents.massdiff <- c(5.072,0.909,1.434,4.023,1.767,0.83,0.877,0.564,-0.054,1.875,-0.864,0.632,0.455,1.781,1.282,0.154,0.68,1.236,4.415,7.330,5.510,5.111,3.811,0.992,1.375,-0.619,0.654,1.408,0.815,0.485,0.735,0.021,1.074,0.988,1.330,0.178,-0.654,-0.909,-1.434,0.388,-1.767,-0.83,-6.173,-2.275,-0.395,-4.471,-6.844,-2.956,-1.048,-5.111,-4.415,-7.330,-2.087,-5.111,-3.811,-0.992,-0.755,-4.654,-3.652,0.706,-5.356,-0.053,-6.475,-0.389)
+
+parents.df <- data.frame(parents.temp, parents.TAI, parents.TEI, parents.ID, parents.massdiff)
+
+parents.df$parents.temp <- as.factor(parents.df$parents.temp)
+parents.df$parents.ID <- as.factor(parents.df$parents.ID)
+
+sqrt.parents.TAI <- sqrt(parents.df$parents.TAI)
+sqrt.parents.TEI <- sqrt(parents.df$parents.TEI)
+
+parents.tai.aov <- aov(sqrt.parents.TAI~parents.temp+Error(parents.ID)+parents.massdiff, data=parents.df)
+
+summary(parents.tai.aov)
+
+parents.tei.aov <- aov(sqrt.parents.TEI~parents.temp+Error(parents.ID)+parents.massdiff, data=parents.df)
+
+summary(parents.tei.aov)
+
+bp.parents.tai <- ggplot(data=parents.df, aes(x=parents.temp, y=sqrt.parents.TAI, fill=parents.temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+bp.parents.tei <- ggplot(data=parents.df, aes(x=parents.temp, y=sqrt.parents.TEI, fill=parents.temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+print(bp.parents.tai)
+print(bp.parents.tei)
+
+```
+```{r parents analysis}
+parents.tai.model <- lme(sqrt.parents.TAI~parents.temp+parents.massdiff, random= ~1|parents.ID, method="ML", data=parents.df)
+summary(parents.tai.model)
+anova(parents.tai.model)
+
+parents.tei.model <- lme(sqrt.parents.TEI~parents.temp+parents.massdiff, random= ~1|parents.ID, method="ML", data=parents.df)
+summary(parents.tei.model)
+anova(parents.tei.model)
+```
+```{r massive df}
+all.ID <- c("pshe013","pshe009","pshe007","pshe015","pshe008","pshe011","pshe012","pshe006","pshe015","pshe008","pshe010","pshe011","pshe012","pshe006","pshe013","pshe009","pshe010","pshe007","pshe007","pshe011","pshe009","pshe007","pshe011","pshe009","pshe006","pshe010","pshe013","pshe014","pshe012","pshe015","pshe006","pshe010","pshe013","pshe014","pshe012","pshe015","ptey011","ptey008","ptey006","ptey011","ptey008","ptey006","ptey012","ptey007","ptey010","ptey009","ptey012","ptey007","ptey010","ptey009","ptey007","ptey012","ptey010","ptey011","ptey007","ptey006","ptey008","ptey009","ptey011","ptey006","ptey009","ptey008","ptey012","ptey010","pshetey006","pshetey011","pshetey008","pshetey012","pshetey014","pshetey010","pshetey011","pshetey015","pshetey006","pshetey014","pshetey013","pshetey010","pshetey015","pshetey013","pshetey009","pshetey007","pshetey008","pshetey012","pshetey007","pshetey009","pshetey007","pshetey009","pshetey011","pshetey008","pshetey010","pshetey015","pshetey009","pshetey007","pshetey008","pshetey011","pshetey015","pshetey010","pshetey014","pshetey006","pshetey012","pshetey013","pshetey014","pshetey006","pshetey012","pshetey013")
+all.temp <- c("15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","15","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23","23")
+all.spec <- c("pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","pshe","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","ptey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey","pshetey")
+all.TAI <- c(3,27,3,15,0,11,0,49,0,25,21,1,32,21,0,48,7,6,77,22,70,51,33,20,20,14,30,0,0,0,41,45,20,10,14,11,31,28,9,10,0,0,3,1,2,33,44,4,40,17,1,2,8,3,9,4,20,0,0,32,28,36,18,5,0,1,0,21,15,6,17,0,0,60,28,10,99,1,33,32,0,4,17,0,19,36,20,19,13,8,19,9,30,0,23,84,1,14,1,8,34,52,52,14)
+all.TEI <- c(52,3,0,4,0,1,0,0,0,5,0,6,5,0,0,4,0,12,1,3,11,0,6,4,8,7,41,13,8,41,2,1,21,0,25,58,2,0,0,4,0,0,23,0,11,16,3,2,4,0,34,9,37,16,3,7,0,0,0,5,6,7,11,12,0,3,0,4,10,0,3,2,0,9,6,0,3,0,3,17,14,2,11,11,18,5,18,3,0,6,20,1,31,28,0,1,1,1,1,5,8,5,8,0)
+all.mass.diff <- c(5.072,0.909,1.434,4.023,1.767,0.83,0.877,0.564,-0.054,1.875,-0.864,0.632,0.455,1.781,1.282,0.154,0.68,1.236,4.415,7.330,5.510,5.111,3.811,0.992,1.375,-0.619,0.654,1.408,0.815,0.485,0.735,0.021,1.074,0.988,1.330,0.178,-0.654,-0.909,-1.434,0.388,-1.767,-0.83,-6.173,-2.275,-0.395,-4.471,-6.844,-2.956,-1.048,-5.111,-4.415,-7.330,-2.087,-5.111,-3.811,-0.992,-0.755,-4.654,-3.652,0.706,-5.356,-0.053,-6.475,-0.389,-0.877,-0.564,-0.032,-1.875,0.864,-0.632,-0.249,-1.645,-1.282,-0.154,-0.680,-1.236,6.183,2.275,1.688,4.471,6.844,2.956,1.048,5.111,-0.183,0.619,-0.654,-1.408,-0.815,-0.693,-0.735,-0.021,-1.074,-0.988,-1.330,-0.178,0.755,4.654,3.652,-0.706,5.356,0.053,6.475,0.389)
+
+all.df <- data.frame(all.temp, all.spec, all.TAI, all.TEI, all.mass.diff, all.ID)
+
+all.df$all.spec <- as.factor(all.df$all.spec)
+all.df$all.ID <- as.factor(all.df$all.ID)
+all.df$all.temp <- as.factor(all.df$all.temp)
+
+sqrt.all.TAI <- sqrt(all.df$all.TAI)
+sqrt.all.TEI <- sqrt(all.df$all.TEI)
+
+summary(all.df)
+
+bp.all.tai <- ggplot(data=all.df, aes(x=all.temp, y=sqrt.all.TAI, fill=all.temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+bp.all.tei <- ggplot(data=all.df, aes(x=all.temp, y=sqrt.all.TEI, fill=all.temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+print(bp.all.tai)
+print(bp.all.tei)
+
+bp.species.split.TAI <- ggplot(data=all.df, aes(x=all.spec, y=sqrt.all.TAI, fill=all.temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+bp.species.split.TEI <- ggplot(data=all.df, aes(x=all.spec, y=sqrt.all.TEI, fill=all.temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+print(bp.species.split.TAI)
+print(bp.species.split.TEI)
+
+bp.species.sum.TAI <- ggplot(data=all.df, aes(x=all.spec, y=sqrt.all.TAI, fill=all.spec))+geom_boxplot()+scale_fill_manual(values=c("red4", "orange", "yellow4"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+bp.species.sum.TEI <- ggplot(data=all.df, aes(x=all.spec, y=sqrt.all.TEI, fill=all.spec))+geom_boxplot()+scale_fill_manual(values=c("slategray","lightblue","purple"))+geom_jitter(shape=16, position=position_jitter(0.1))
+
+print(bp.species.sum.TAI)
+print(bp.species.sum.TEI)
+
+all.tai.model <- lme(sqrt.all.TAI~all.temp+all.spec+all.mass.diff, random= ~1|all.ID, method="ML", data=all.df)
+summary(all.tai.model)
+anova(all.tai.model)
+
+all.tei.model <- lme(sqrt.all.TEI~all.temp + all.spec + all.mass.diff, random= ~1|all.ID, method="ML", data=all.df)
+summary(all.tei.model)
+anova(all.tei.model)
+
+```
+
+```{r junk code}
+t.test(sqrt.pshe.TAI~pshe.temp, data=pshe.df)
+t.test(sqrt.pshe.TEI~pshe.temp, data=pshe.df)
+
+t.test(sqrt.ptey.TAI~ptey.temp, data=ptey.df)
+t.test(sqrt.ptey.TEI~ptey.temp, data=ptey.df)
+
+t.test(sqrt.pshetey.TAI~pshetey.temp, data=pshetey.df)
+t.test(sqrt.pshetey.TEI~pshetey.temp, data=pshetey.df)
+
+wilcox.test(pshetey.TAI~pshetey.temp, data=pshetey.df, exact=FALSE)
+wilcox.test(pshetey.TEI~pshetey.temp, data=pshetey.df, exact=FALSE)
+
+boxplot(sqrt.pshetey.TAI~pshetey.temp, data=pshetey.df, col="pink")
+boxplot(sqrt.pshetey.TEI~pshetey.temp, data=pshetey.df, col="yellow")
+
+```
