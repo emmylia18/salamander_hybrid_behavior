@@ -1,0 +1,209 @@
+---
+title: "hybridproject"
+output: html_document
+date: "2023-10-18"
+---
+```{r library}
+
+library(car)
+library(nlme)
+library(lme4)
+library(ggplot2)
+
+
+
+```
+```{r importing data}
+
+#importing the data
+dat <- read.csv("C:/Users/18034/Dropbox/Research/hybrid_behavior/hybrid_data.csv")
+summary(dat)
+
+nrow(dat)
+
+#setting temperature, population, and ID as categorical factors
+dat$id <- as.factor(dat$id)
+dat$bout <- as.factor(dat$bout)
+dat$pop <- as.factor(dat$pop)
+dat$temp <- as.factor(dat$temp)
+
+#data is not normal - it is skewed right. Negative binomial distribution
+
+```
+
+```{r defining subsets}
+
+pshe <- dat[which(dat$pop=="pshe"),]
+ptey <- dat[which(dat$pop=="ptey"),]
+pshetey <- dat[which(dat$pop=="pshetey"),]
+parents <- dat[which(dat$pop=="pshe" | dat$pop=="ptey"),]
+
+```
+
+```{r ANOVA}
+
+#one-way ANOVA
+
+p.tai.aov <- aov(sqrtTAI~temp+Error(id)+mass.diff, data=parents)
+summary(p.tai.aov)
+p.tei.aov <- aov(sqrtTEI~temp+Error(id)+mass.diff, data=parents)
+summary(p.tei.aov)
+
+h.tai.aov <- aov(sqrtTAI~temp+Error(id)+mass.diff, data=pshetey)
+summary(h.tai.aov)
+h.tei.aov <- aov(sqrtTEI~temp+Error(id)+mass.diff, data=pshetey)
+summary(h.tei.aov)
+
+```
+
+```{r LME}
+
+#One-way ANOVA with linear mixed effects
+
+p.tai.lme <- lme(sqrtTAI~temp+mass.diff, random=~1|id, data=parents)
+summary(p.tai.lme)
+Anova(p.tai.lme)
+
+p.tei.lme <- lme(sqrtTEI~temp+mass.diff, random=~1|id, data=parents)
+summary(p.tei.lme)
+Anova(p.tei.lme)
+
+h.tai.lme <- lme(sqrtTAI~temp+mass.diff, random=~1|id, data=pshetey)
+summary(h.tai.lme)
+Anova(h.tai.lme)
+
+h.tei.lme <- lme(sqrtTEI~temp+mass.diff, random=~1|id, data=pshetey)
+summary(h.tei.lme)
+Anova(h.tei.lme)
+
+
+```
+
+```{r Kruskal-Wallis Test, Conover Test as post-hoc}
+
+kruskal.test(TAI~temp, data=dat)
+kruskal.test(TEI~temp, data=dat)
+
+kruskal.test(TAI~temp, data=parents)
+kruskal.test(TEI~temp, data=parents)
+
+kruskal.test(TAI~temp, data=pshetey)
+kruskal.test(TEI~temp, data=pshetey)
+
+```
+
+```{r}
+
+wilcox.test(TAI~temp, data=dat)
+wilcox.test(TEI~temp, data=dat)
+
+wilcox.test(TAI~temp, data=parents)
+wilcox.test(TEI~temp, data=parents)
+
+wilcox.test(TAI~temp, data=pshetey)
+wilcox.test(TEI~temp, data=pshetey)
+
+```
+```{r negative binomial GLMMS}
+
+#type II anovas
+#Anova (capital A accounts for unbalanced design)
+
+nb.TAI <- glmer.nb(TAI~temp+mass.diff+temp:mass.diff+(1|id)+(1|bout), data=dat)
+Anova(nb.TAI)
+#mass is trending
+nb.TEI <- glmer.nb(TEI~temp+mass.diff+temp:mass.diff+(1|id)+(1|bout), data=dat)
+Anova(nb.TEI)
+#temp is significant
+
+nb.p.TAI <- glmer.nb(TAI~temp+mass.diff+temp:mass.diff+(1|id), data=parents)
+Anova(nb.p.TAI)
+#mass is trending
+nb.p.TEI <- glmer.nb(TEI~temp+mass.diff+temp:mass.diff+(1|id), data=parents)
+Anova(nb.p.TEI)
+#temp is significant
+
+nb.h.TAI <- glmer.nb(TAI~temp+mass.diff+temp:mass.diff+(1|id), data=pshetey)
+Anova(nb.h.TAI)
+#mass diff is trending
+nb.h.TEI <- glmer.nb(TEI~temp+mass.diff+temp:mass.diff+(1|id), data=pshetey)
+Anova(nb.h.TEI)
+#temp is significant
+
+
+```
+```{r boxplots}
+
+all.TAI <- ggplot(data=dat, aes(x=pop, y=sqrtTAI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))+geom_point(position=position_jitterdodge(jitter.width=0.2))+theme_bw()
+print(all.TAI)
+
+all.TEI <- ggplot(data=dat, aes(x=pop, y=sqrtTEI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))+geom_point(position=position_jitterdodge(jitter.width=0.2))+theme_bw()
+print(all.TEI)
+
+
+parents.TAI <- ggplot(data=parents, aes(x=pop, y=sqrtTAI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))
+print(parents.TAI)
+
+parents.TEI <- ggplot(data=parents, aes(x=pop, y=sqrtTEI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))
+print(parents.TEI)
+
+
+
+hybrid.TAI <- ggplot(data=pshetey, aes(x=pop, y=sqrtTAI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("violetred4", "orange1"))
+print(hybrid.TAI)
+
+hybrid.TEI <- ggplot(data=pshetey, aes(x=pop, y=sqrtTEI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("darkslategray", "olivedrab1"))
+print(hybrid.TEI)
+
+```
+```{r ADVICE FROM XINGLI}
+
+TAI.all <- lmer(log(TAI+1)~pop+temp+mass.diff+pop:temp+mass.diff:temp+pop:mass.diff+(1|id)+(1|bout), data=dat)
+Anova(TAI.all)
+TEI.all <- lmer(log(TEI+1)~pop+temp+mass.diff+pop:temp+mass.diff:temp+pop:mass.diff+(1|id)+(1|bout), data=dat)
+Anova(TEI.all)
+
+TAI.parents <- lmer(log(TAI+1)~pop+temp+mass.diff+pop:temp+mass.diff:temp+pop:mass.diff+(1|id)+(1|bout), data=parents)
+Anova(TAI.parents)
+TEI.parents <- lmer(log(TEI+1)~pop+temp+mass.diff+pop:temp+mass.diff:temp+pop:mass.diff+(1|id)+(1|bout), data=parents)
+Anova(TEI.parents)
+
+TAI.hybrids <- lmer(log(TAI+1)~temp+mass.diff+mass.diff:temp+(1|id)+(1|bout), data=pshetey)
+Anova(TAI.hybrids)
+TEI.hybrids <- lmer(log(TEI+1)~temp+mass.diff+mass.diff:temp+(1|id)+(1|bout), data=pshetey)
+Anova(TEI.hybrids)
+
+
+```
+```{r models with adjusted interactions}
+
+
+TAI.all.fin <- lmer(log(TAI+1)~pop+temp+mass.diff+(1|id)+(1|bout), data=dat)
+Anova(TAI.all.fin)
+TEI.all.fin <- lmer(log(TEI+1)~pop+temp+mass.diff+(1|id)+(1|bout), data=dat)
+Anova(TEI.all.fin)
+#no interaction terms made a meaningful difference in the predictive power of the model
+
+TAI.parents.fin <- lmer(log(TAI+1)~pop+temp+mass.diff+mass.diff:temp+(1|id)+(1|bout), data=parents)
+Anova(TAI.parents.fin)
+#keeping mass.diff:temp was best for the TAI model
+TEI.parents.fin <- lmer(log(TEI+1)~pop+temp+mass.diff+(1|id)+(1|bout), data=parents)
+Anova(TEI.parents.fin)
+
+TAI.hybrids.fin <- lmer(log(TAI+1)~temp+mass.diff+(1|id)+(1|bout), data=pshetey)
+Anova(TAI.hybrids.fin)
+TEI.hybrids.fin <- lmer(log(TEI+1)~temp+mass.diff+mass.diff:temp+(1|id)+(1|bout), data=pshetey)
+Anova(TEI.hybrids.fin)
+#keeping mass.diff:temp was best for the TEI model
+
+```
+```{R poster plots}
+
+all.TAI <- ggplot(data=dat, aes(x=pop, y=sqrtTAI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("darkcyan", "darkorange"), name="Temp. (C)")+geom_point(position=position_jitterdodge(jitter.width=0.2))+theme_bw()+xlab("Population")+ylab("Thermal Aggressive Index (TAI)")
+print(all.TAI)
+
+all.TEI <- ggplot(data=dat, aes(x=pop, y=sqrtTEI, fill=temp))+geom_boxplot()+scale_fill_manual(values=c("darkcyan", "darkorange"), name="Temp. (C)")+geom_point(position=position_jitterdodge(jitter.width=0.2))+theme_bw()+xlab("Population")+ylab("Thermal Evasive Index (TEI)")
+print(all.TEI)
+
+```
+
