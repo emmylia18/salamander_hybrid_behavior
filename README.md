@@ -1,4 +1,4 @@
-#Thermal sensitivity changes competitive ability across a woodland salamander hybrid system.
+**Thermal sensitivity changes competitive ability across a woodland salamander hybrid system.**
 
 Emmy James and Martha Muñoz
 
