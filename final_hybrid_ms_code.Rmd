@@ -11,17 +11,12 @@ date: "2024-07-13"
 
 #Here we're loading the appropriate libraries into the session.
 library(car)
-library(nlme)
-library(lme4)
 library(ggplot2)
 library(ggpubr)
-library(cowplot)
-library(MuMIn)
 library(lmerTest)
 library(AICcmodavg)
 library(systemfonts)
 library(xtable)
-library(ragg)
 library(knitr)
 library(ggtext)
 
