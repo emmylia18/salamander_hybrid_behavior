@@ -529,7 +529,7 @@ TAI_pshetey_results[4:8] <- lapply(TAI_pshetey_results[4:8],as.numeric)
 TEI_pshetey_results[4:8] <- lapply(TEI_pshetey_results[4:8],as.numeric)
 
 
-# binding the two rows together
+# binding the rows together
 Full_results <- rbind(TAI_all_results, TEI_all_results, TAI_pshe_results, TEI_pshe_results, TAI_ptey_results, TEI_ptey_results, TAI_pshetey_results, TEI_pshetey_results)
 
 library(dplyr)
@@ -650,7 +650,7 @@ TAI_hyb_tempavg[3:7] <- lapply(TAI_hyb_tempavg[3:7],as.numeric)
 TEI_hyb_tempavg[3:7] <- lapply(TEI_hyb_tempavg[3:7],as.numeric)
 
 
-# binding the two rows together
+# binding the rows together
 Avg_results <- rbind(TAI_tempavg, TEI_tempavg,TAI_sher_tempavg,TEI_sher_tempavg,TAI_tey_tempavg,TEI_tey_tempavg,TAI_hyb_tempavg,TEI_hyb_tempavg)
 
 # naming the columns with the columns of interest
